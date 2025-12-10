@@ -3,50 +3,484 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PHASMO.OS // FINAL</title>
+    <title>PHASMO.OS // Complete Investigation Suite</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
 <body>
 
-    <!-- WIP BANNER -->
-    <div class="wip-banner" id="wipBanner">
-        <span class="wip-icon">⚠️</span>
-        <span class="wip-text">Site is Work in Progress. Expect bugs!</span>
-        <button class="wip-close" id="wipClose" aria-label="Dismiss banner">✕</button>
-    </div>
-
     <header>
         <div class="brand">
             <div class="live-dot"></div>
             PHASMO<span>.OS</span>
+            <div class="version">v2.0</div>
         </div>
+        <nav class="header-nav">
+            <button class="nav-btn" onclick="showSection('ghosts')">👻 Ghosts</button>
+            <button class="nav-btn" onclick="showSection('maps')">🗺️ Maps</button>
+            <button class="nav-btn" onclick="showSection('equipment')">🔦 Equipment</button>
+            <button class="nav-btn" onclick="showSection('mechanics')">⚙️ Mechanics</button>
+            <button class="nav-btn" onclick="showSection('strategy')">📋 Strategy</button>
+        </nav>
         <div class="header-tools">
             <button class="btn-icon" id="btnManual" title="Hunter's Manual">📖</button>
             <button class="btn-reset" id="btnReset">Reset</button>
         </div>
     </header>
 
-    <div class="controls-wrapper">
-        <div class="evidence-bar" id="evBar"></div>
-        <div class="filters-row" id="filterRow"></div>
-    </div>
-
-    <div class="dashboard-container">
-        <div class="status-header">
-            <div><span id="matchCount">24</span> Candidates</div>
+    <!-- GHOSTS SECTION (Default) -->
+    <div class="main-section" id="section-ghosts" style="display: flex;">
+        <div class="controls-wrapper">
+            <div class="evidence-bar" id="evBar"></div>
+            <div class="filters-row" id="filterRow"></div>
         </div>
-        <div class="ghost-grid" id="ghostGrid"></div>
+
+        <div class="dashboard-container">
+            <div class="status-header">
+                <div><span id="matchCount">24</span> Candidates</div>
+                <div class="quick-stats">
+                    <span class="stat-badge">Evidence: <span id="evCount">0</span>/3</span>
+                    <span class="stat-badge">Filters: <span id="filterCount">0</span></span>
+                </div>
+            </div>
+            <div class="ghost-grid" id="ghostGrid"></div>
+        </div>
     </div>
 
+    <!-- MAPS SECTION -->
+    <div class="main-section" id="section-maps" style="display: none;">
+        <div class="section-container">
+            <h2 class="page-title">📍 MAP DATABASE</h2>
+            
+            <div class="maps-category">
+                <h3 class="category-header">SMALL MAPS (Starter Friendly)</h3>
+                <div class="map-grid">
+                    <div class="map-card">
+                        <div class="map-header">
+                            <h4>Tanglewood Street House</h4>
+                            <span class="difficulty">★☆☆</span>
+                        </div>
+                        <div class="map-info">
+                            <span class="info-tag">2 Floors</span>
+                            <span class="info-tag">8 Rooms</span>
+                            <span class="info-tag">1 Bone</span>
+                        </div>
+                        <p class="map-desc">Tutorial map. Single-floor layout with basement. Great for learning basics. Truck is very close.</p>
+                        <div class="map-tips">
+                            <strong>Hiding Spots:</strong> Bedroom closets, basement storage, garage<br>
+                            <strong>Tips:</strong> Perfect for beginners. Small enough to cover quickly.
+                        </div>
+                    </div>
+
+                    <div class="map-card">
+                        <div class="map-header">
+                            <h4>Edgefield Street House</h4>
+                            <span class="difficulty">★☆☆</span>
+                        </div>
+                        <div class="map-info">
+                            <span class="info-tag">2 Floors</span>
+                            <span class="info-tag">9 Rooms</span>
+                        </div>
+                        <p class="map-desc">Similar to Tanglewood. Small suburban house with garage and attic access.</p>
+                        <div class="map-tips">
+                            <strong>Hiding Spots:</strong> Multiple closets, garage, attic<br>
+                            <strong>Tips:</strong> Slightly larger with more vertical exploration.
+                        </div>
+                    </div>
+
+                    <div class="map-card">
+                        <div class="map-header">
+                            <h4>Bleasdale Farmhouse</h4>
+                            <span class="difficulty">★★☆</span>
+                        </div>
+                        <div class="map-info">
+                            <span class="info-tag">2 Floors</span>
+                            <span class="info-tag">12 Rooms</span>
+                        </div>
+                        <p class="map-desc">Rural farmhouse with attic. More complex than street houses. Watch for breaker location.</p>
+                        <div class="map-tips">
+                            <strong>Hiding Spots:</strong> Attic corners, bedroom closets, pantry<br>
+                            <strong>Tips:</strong> Larger small map. Attic can be tricky to navigate.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="maps-category">
+                <h3 class="category-header">MEDIUM MAPS (Intermediate Challenge)</h3>
+                <div class="map-grid">
+                    <div class="map-card">
+                        <div class="map-header">
+                            <h4>Brownstone High School</h4>
+                            <span class="difficulty">★★☆</span>
+                        </div>
+                        <div class="map-info">
+                            <span class="info-tag">2 Floors</span>
+                            <span class="info-tag">30 Rooms</span>
+                        </div>
+                        <p class="map-desc">High school with classrooms, gym, cafeteria. Long hallways make hunts dangerous.</p>
+                        <div class="map-tips">
+                            <strong>Hiding Spots:</strong> Bathroom stalls, classroom closets, some lockers<br>
+                            <strong>Tips:</strong> Use sound sensors. Watch hallways during hunts.
+                        </div>
+                    </div>
+
+                    <div class="map-card">
+                        <div class="map-header">
+                            <h4>Prison</h4>
+                            <span class="difficulty">★★★</span>
+                        </div>
+                        <div class="map-info">
+                            <span class="info-tag">2 Floors</span>
+                            <span class="info-tag">28 Rooms</span>
+                        </div>
+                        <p class="map-desc">Abandoned prison. Multiple cell blocks. VERY dark. Poltergeist is deadly here.</p>
+                        <div class="map-tips">
+                            <strong>Hiding Spots:</strong> Prison cells, closets, bathrooms<br>
+                            <strong>Tips:</strong> Bring EXTRA lights. Cells look identical - use landmarks.
+                        </div>
+                    </div>
+
+                    <div class="map-card">
+                        <div class="map-header">
+                            <h4>Maple Lodge Campsite</h4>
+                            <span class="difficulty">★★★</span>
+                        </div>
+                        <div class="map-info">
+                            <span class="info-tag">1 Floor</span>
+                            <span class="info-tag">22 Areas</span>
+                        </div>
+                        <p class="map-desc">Outdoor campground. NO indoor safety. Freezing temps everywhere in winter.</p>
+                        <div class="map-tips">
+                            <strong>Hiding Spots:</strong> Cabins, tents (limited protection)<br>
+                            <strong>Tips:</strong> Entirely outdoor. Unique mechanics. Very challenging.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="maps-category">
+                <h3 class="category-header">LARGE MAPS (Expert Only)</h3>
+                <div class="map-grid">
+                    <div class="map-card highlight-danger">
+                        <div class="map-header">
+                            <h4>Sunny Meadows Mental Institution</h4>
+                            <span class="difficulty">★★★</span>
+                        </div>
+                        <div class="map-info">
+                            <span class="info-tag">2 Floors</span>
+                            <span class="info-tag">70+ Rooms</span>
+                            <span class="info-tag">2 Cursed Items</span>
+                        </div>
+                        <p class="map-desc">MASSIVE asylum. Longest investigations. Team coordination ESSENTIAL. Split up to find ghost.</p>
+                        <div class="map-tips">
+                            <strong>Hiding Spots:</strong> Patient rooms throughout, many closets<br>
+                            <strong>Tips:</strong> Motion sensors essential. Can take 20+ mins to find ghost.
+                        </div>
+                    </div>
+
+                    <div class="map-card">
+                        <div class="map-header">
+                            <h4>Point Hope</h4>
+                            <span class="difficulty">★★★</span>
+                        </div>
+                        <div class="map-info">
+                            <span class="info-tag">1 Floor</span>
+                            <span class="info-tag">18 Areas</span>
+                        </div>
+                        <p class="map-desc">Lighthouse island. Weather effects. Indoor/outdoor mix. Unique layout.</p>
+                        <div class="map-tips">
+                            <strong>Hiding Spots:</strong> Lighthouse interior, keeper's house<br>
+                            <strong>Tips:</strong> Weather impacts gameplay. Spread out spaces.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EQUIPMENT SECTION -->
+    <div class="main-section" id="section-equipment" style="display: none;">
+        <div class="section-container">
+            <h2 class="page-title">🔦 EQUIPMENT DATABASE</h2>
+            
+            <div class="equip-tabs">
+                <button class="tab-btn active" onclick="switchEquipTab('detection')">Detection</button>
+                <button class="tab-btn" onclick="switchEquipTab('protection')">Protection</button>
+                <button class="tab-btn" onclick="switchEquipTab('utility')">Utility</button>
+            </div>
+
+            <div id="equip-content"></div>
+        </div>
+    </div>
+
+    <!-- MECHANICS SECTION -->
+    <div class="main-section" id="section-mechanics" style="display: none;">
+        <div class="section-container">
+            <h2 class="page-title">⚙️ GAME MECHANICS</h2>
+            
+            <div class="mechanics-grid">
+                <div class="mechanic-card">
+                    <h3>🧠 SANITY SYSTEM</h3>
+                    <div class="mechanic-content">
+                        <h4>Starting Sanity</h4>
+                        <ul>
+                            <li>Amateur - Nightmare: <span class="hl-green">100%</span></li>
+                            <li>Insanity: <span class="hl-red">0%</span></li>
+                        </ul>
+                        
+                        <h4>Passive Drain</h4>
+                        <ul>
+                            <li>Lights OFF: <span class="hl-red">-0.12%/s</span></li>
+                            <li>Lights ON: <span class="hl-green">0%/s</span></li>
+                            <li>Near Candle: <span class="hl-green">0%/s</span></li>
+                        </ul>
+                        
+                        <h4>Hunt Thresholds</h4>
+                        <ul>
+                            <li>Standard: 50%</li>
+                            <li>Demon: 70%</li>
+                            <li>Mare: 60% (dark) / 40% (light)</li>
+                            <li>Shade: 35%</li>
+                            <li>Yokai: 80% (when talking)</li>
+                        </ul>
+                        
+                        <h4>Restoration</h4>
+                        <ul>
+                            <li>Sanity Pills: +25%</li>
+                            <li>Tarot Sun: +100%</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mechanic-card">
+                    <h3>⚔️ HUNT MECHANICS</h3>
+                    <div class="mechanic-content">
+                        <h4>Ghost Speeds</h4>
+                        <ul>
+                            <li>Baseline: 1.7 m/s</li>
+                            <li>Player Sprint: 3.0 m/s</li>
+                            <li>Revenant (LoS): 3.0 m/s</li>
+                            <li>Deogen (close): 0.4 m/s</li>
+                            <li>Jinn/Raiju (boosted): 2.5 m/s</li>
+                            <li>Hantu (cold): up to 2.7 m/s</li>
+                        </ul>
+                        
+                        <h4>Detection Range</h4>
+                        <ul>
+                            <li>Sight: Line of sight = chase</li>
+                            <li>Electronics: 12m (Yokai: 2.5m)</li>
+                            <li>Voice: 12m (Yokai: 2.5m)</li>
+                            <li>Footsteps: Audible to ghost</li>
+                        </ul>
+                        
+                        <h4>Hunt Duration</h4>
+                        <ul>
+                            <li>Standard: 30-45 seconds</li>
+                            <li>Cooldown: 25s (Demon: 20s)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mechanic-card">
+                    <h3>🎲 DIFFICULTY MODIFIERS</h3>
+                    <div class="mechanic-content">
+                        <h4>Amateur (1.0x)</h4>
+                        <ul>
+                            <li>Setup: 5 minutes</li>
+                            <li>Grace: 5 minutes</li>
+                            <li>Fingerprints: 60s</li>
+                            <li>Death: No penalty</li>
+                        </ul>
+                        
+                        <h4>Intermediate (2.0x)</h4>
+                        <ul>
+                            <li>Setup: 2 minutes</li>
+                            <li>Grace: 2 minutes</li>
+                            <li>Death: Lose equipment</li>
+                        </ul>
+                        
+                        <h4>Professional (3.0x)</h4>
+                        <ul>
+                            <li>Setup: 0 minutes</li>
+                            <li>Grace: 0 minutes</li>
+                            <li>Fusebox: Starts OFF</li>
+                            <li>Death: Lose equipment + money</li>
+                        </ul>
+                        
+                        <h4>Nightmare (4.0x)</h4>
+                        <ul>
+                            <li><span class="hl-red">2 evidence only!</span></li>
+                            <li>Fingerprints: 30s</li>
+                            <li>Electronics malfunction</li>
+                            <li>No D.O.T.S visual</li>
+                        </ul>
+                        
+                        <h4>Insanity (0.0x)</h4>
+                        <ul>
+                            <li><span class="hl-red">0% starting sanity</span></li>
+                            <li>Pills do nothing</li>
+                            <li>No rewards (challenge only)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mechanic-card">
+                    <h3>🔮 CURSED POSSESSIONS</h3>
+                    <div class="mechanic-content">
+                        <h4>Ouija Board</h4>
+                        <p>Ask questions. 5-25% sanity per question. Say "Goodbye" or hunt!</p>
+                        
+                        <h4>Music Box</h4>
+                        <p>Wind to summon. Ghost walks toward you. DON'T hold until empty!</p>
+                        
+                        <h4>Summoning Circle</h4>
+                        <p>Light all candles = ghost appears + GUARANTEED HUNT.</p>
+                        
+                        <h4>Voodoo Doll</h4>
+                        <p>10 pins. Each = interaction. HEART PIN = HUNT!</p>
+                        
+                        <h4>Monkey Paw</h4>
+                        <p>5 wishes. All have curses. Very risky!</p>
+                        
+                        <h4>Tarot Cards</h4>
+                        <p>Random effects. Tower/Death = hunt. Sun = full sanity.</p>
+                        
+                        <h4>Haunted Mirror</h4>
+                        <p>Shows ghost location. MASSIVE sanity drain. Quick glances only!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STRATEGY SECTION -->
+    <div class="main-section" id="section-strategy" style="display: none;">
+        <div class="section-container">
+            <h2 class="page-title">📋 STRATEGY GUIDE</h2>
+            
+            <div class="strategy-phase">
+                <h3 class="phase-header">🎯 EARLY GAME (Setup Phase)</h3>
+                <div class="strategy-content">
+                    <ul>
+                        <li>Locate ghost room using thermometer sweeps (coldest room)</li>
+                        <li>Place equipment strategically: EMF reader, writing book, DOTS</li>
+                        <li>Work as team to cover more ground faster</li>
+                        <li>Manage sanity - stay in lit areas during setup</li>
+                        <li>Use motion/sound sensors on large maps to track roaming</li>
+                        <li>Identify 1-2 evidence pieces before pushing deeper</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="strategy-phase">
+                <h3 class="phase-header">⚡ MID GAME (Evidence Collection)</h3>
+                <div class="strategy-content">
+                    <ul>
+                        <li>Saturate ghost room with all relevant detection tools</li>
+                        <li>Use smudge sticks to prevent hunts while investigating</li>
+                        <li>Complete easy objectives first (photos, motion sensor)</li>
+                        <li>Monitor sanity closely - know your hunt threshold</li>
+                        <li>Communicate evidence found and suspected ghosts with team</li>
+                        <li>Test specific ghost abilities (smudge timer, salt footprints)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="strategy-phase">
+                <h3 class="phase-header">🏁 LATE GAME (Identification & Exit)</h3>
+                <div class="strategy-content">
+                    <ul>
+                        <li>With 3 evidence, identify ghost and GET OUT</li>
+                        <li>Don't get greedy with objectives at low sanity</li>
+                        <li>Use crucifixes and smudge sticks defensively</li>
+                        <li>Have escape routes planned from all locations</li>
+                        <li>Solo players: Know your hiding spots and exit paths</li>
+                        <li>If unsure between 2 ghosts, use behavior tests</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="strategy-phase">
+                <h3 class="phase-header">🎓 ADVANCED TECHNIQUES</h3>
+                <div class="strategy-content">
+                    <ul>
+                        <li>Master ghost-specific tests (Spirit 180s, Wraith no prints, etc)</li>
+                        <li>Use cursed possessions strategically for bonus evidence/photos</li>
+                        <li>Learn looping patterns for fast ghosts (Revenant, Jinn)</li>
+                        <li>Understand LoS mechanics - break vision to reset chase</li>
+                        <li>On Nightmare, use behavior + 2 evidence to eliminate options</li>
+                        <li>Practice solo investigations to understand ghost behavior better</li>
+                        <li>Use parabolic mic to identify Banshee/Moroi instantly</li>
+                        <li>Leverage ghost weaknesses (Mare light sensitivity, etc)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="strategy-phase">
+                <h3 class="phase-header">⚠️ SURVIVAL TIPS</h3>
+                <div class="strategy-content">
+                    <div class="tip-grid">
+                        <div class="tip-card">
+                            <h4>During Hunts</h4>
+                            <ul>
+                                <li>Break line of sight immediately</li>
+                                <li>Hide in closets/lockers (close door, stay quiet)</li>
+                                <li>Loop furniture vs slow ghosts</li>
+                                <li>Smudge to blind and slow ghost</li>
+                                <li>Turn OFF electronics (flashlight, etc)</li>
+                                <li>Don't talk - ghost hears you</li>
+                            </ul>
+                        </div>
+                        <div class="tip-card">
+                            <h4>Sanity Management</h4>
+                            <ul>
+                                <li>Stay in lit areas when possible</li>
+                                <li>Light candles for safe zones</li>
+                                <li>Save pills for after evidence</li>
+                                <li>Avoid staring at Phantom</li>
+                                <li>Leave before critical (25%) sanity</li>
+                                <li>Use pills to slow Moroi</li>
+                            </ul>
+                        </div>
+                        <div class="tip-card">
+                            <h4>Equipment Usage</h4>
+                            <ul>
+                                <li>Place crucifixes in ghost room center</li>
+                                <li>Smudge in ghost room for 90s safety</li>
+                                <li>Drop EMF reader, don't carry it</li>
+                                <li>Use glowsticks for constant UV coverage</li>
+                                <li>Salt in doorways tracks roaming</li>
+                                <li>Multiple cameras = better Orb detection</li>
+                            </ul>
+                        </div>
+                        <div class="tip-card">
+                            <h4>Map-Specific</h4>
+                            <ul>
+                                <li>Small maps: Quick in-and-out</li>
+                                <li>Medium maps: Use sensors to track</li>
+                                <li>Large maps: Split team, motion sensors essential</li>
+                                <li>Prison: Bring EXTRA lights</li>
+                                <li>Maple/Campsite: No true safety</li>
+                                <li>Asylum: Can take 20+ minutes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER (Timer) -->
     <div class="footer">
         <button class="timer-play" id="timerBtn">▶</button>
         <div class="timer-center">
+            <div class="timer-label">HUNT COOLDOWN</div>
             <div class="timer-val" id="timerDisplay">90</div>
             <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
         </div>
@@ -54,6 +488,7 @@
             <button class="t-opt active" data-time="90">Smudge</button>
             <button class="t-opt" data-time="180">Spirit</button>
             <button class="t-opt" data-time="60">Demon</button>
+            <button class="t-opt" data-time="25">Cooldown</button>
         </div>
     </div>
 
@@ -82,6 +517,34 @@
             <div id="manualContent"></div>
         </div>
     </dialog>
+
+    <script>
+        // Section switching
+        function showSection(section) {
+            document.querySelectorAll('.main-section').forEach(s => s.style.display = 'none');
+            document.getElementById(`section-${section}`).style.display = 'flex';
+            document.querySelectorAll('.header-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Initialize equipment section if switching to it
+            if (section === 'equipment') {
+                setTimeout(() => {
+                    if (window.showEquipTab) {
+                        window.showEquipTab('detection');
+                    }
+                }, 50);
+            }
+        }
+
+        // Equipment tab switching helper - calls the main function from script.js
+        function switchEquipTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            if (window.showEquipTab) {
+                window.showEquipTab(tab);
+            }
+        }
+    </script>
 
 </body>
 </html>
