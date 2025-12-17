@@ -886,6 +886,8 @@ function resetTimer() {
 
 // kick off
 init();
+// Initialize Group Journal
+initGroupJournal();
 
 // Initialize equipment when page loads
 window.addEventListener('DOMContentLoaded', function() {
@@ -1197,52 +1199,89 @@ function copyShareLink() {
 
 // Initialize Group Journal UI
 function initGroupJournal() {
-    // Get UI elements
-    ui.groupModal = document.getElementById('groupModal');
+    console.log("Initializing Group Journal...");
     
-    // Button to open modal
-    document.getElementById('btnGroupJournal').addEventListener('click', () => {
-        if (groupJournal.syncEnabled) {
-            // Already in session, show active session view
-            showActiveSession();
+    try {
+        // Get UI elements
+        ui.groupModal = document.getElementById('groupModal');
+        
+        if (!ui.groupModal) {
+            console.error("Group modal not found!");
+            return;
         }
-        ui.groupModal.showModal();
-    });
-    
-    // Close button
-    document.getElementById('closeGroup').addEventListener('click', () => {
-        ui.groupModal.close();
-    });
-    
-    // Create session button
-    document.getElementById('btnCreateSession').addEventListener('click', createGroupSession);
-    
-    // Join session button
-    document.getElementById('btnJoinSession').addEventListener('click', () => {
-        const sessionId = document.getElementById('joinSessionInput').value;
-        joinGroupSession(sessionId);
-    });
-    
-    // Leave session button
-    document.getElementById('btnLeaveSession').addEventListener('click', () => {
-        if (confirm('Are you sure you want to leave this group session?')) {
-            leaveGroupSession();
+        
+        // Button to open modal
+        const btnGroupJournal = document.getElementById('btnGroupJournal');
+        if (btnGroupJournal) {
+            btnGroupJournal.addEventListener('click', () => {
+                console.log("Group Journal button clicked!");
+                if (groupJournal.syncEnabled) {
+                    // Already in session, show active session view
+                    showActiveSession();
+                }
+                ui.groupModal.showModal();
+            });
+        } else {
+            console.error("btnGroupJournal not found!");
         }
-    });
-    
-    // Copy link button
-    document.getElementById('btnCopyLink').addEventListener('click', copyShareLink);
-    
-    // Join session on Enter key
-    document.getElementById('joinSessionInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const sessionId = document.getElementById('joinSessionInput').value;
-            joinGroupSession(sessionId);
+        
+        // Close button
+        const closeGroup = document.getElementById('closeGroup');
+        if (closeGroup) {
+            closeGroup.addEventListener('click', () => {
+                ui.groupModal.close();
+            });
         }
-    });
-    
-    // Check if URL has session parameter
-    checkUrlForSession();
+        
+        // Create session button
+        const btnCreateSession = document.getElementById('btnCreateSession');
+        if (btnCreateSession) {
+            btnCreateSession.addEventListener('click', createGroupSession);
+        }
+        
+        // Join session button
+        const btnJoinSession = document.getElementById('btnJoinSession');
+        if (btnJoinSession) {
+            btnJoinSession.addEventListener('click', () => {
+                const sessionId = document.getElementById('joinSessionInput').value;
+                joinGroupSession(sessionId);
+            });
+        }
+        
+        // Leave session button
+        const btnLeaveSession = document.getElementById('btnLeaveSession');
+        if (btnLeaveSession) {
+            btnLeaveSession.addEventListener('click', () => {
+                if (confirm('Are you sure you want to leave this group session?')) {
+                    leaveGroupSession();
+                }
+            });
+        }
+        
+        // Copy link button
+        const btnCopyLink = document.getElementById('btnCopyLink');
+        if (btnCopyLink) {
+            btnCopyLink.addEventListener('click', copyShareLink);
+        }
+        
+        // Join session on Enter key
+        const joinSessionInput = document.getElementById('joinSessionInput');
+        if (joinSessionInput) {
+            joinSessionInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const sessionId = joinSessionInput.value;
+                    joinGroupSession(sessionId);
+                }
+            });
+        }
+        
+        // Check if URL has session parameter
+        checkUrlForSession();
+        
+        console.log("Group Journal initialized successfully!");
+    } catch (error) {
+        console.error("Error initializing Group Journal:", error);
+    }
 }
 
 // Modify the original updateBoard to sync
@@ -1255,9 +1294,3 @@ updateBoard = function() {
 };
 
 // Add Group Journal to init
-const originalInit = init;
-init = function() {
-    originalInit();
-    initGroupJournal();
-};
-
