@@ -919,7 +919,8 @@ let groupJournal = {
     isHost: false,
     userId: null,
     syncEnabled: false,
-    lastSync: 0
+    lastSync: 0,
+    syncTimeout: null
 };
 
 // Initialize Firebase (only if config is set)
@@ -958,29 +959,40 @@ function createGroupSession() {
         return;
     }
     
-    groupJournal.sessionId = generateSessionId();
-    groupJournal.isHost = true;
-    groupJournal.syncEnabled = true;
-    
-    // Initialize session in Firebase
-    const sessionRef = firebase.database().ref(`sessions/${groupJournal.sessionId}`);
-    sessionRef.set({
-        createdAt: Date.now(),
-        host: groupJournal.userId,
-        evidence: app.evidence,
-        filters: Array.from(app.activeFilters),
-        timer: app.timer,
-        lastUpdate: Date.now()
-    });
-    
-    // Show active session UI
-    showActiveSession();
-    
-    // Start listening for updates from others
-    listenToSession();
-    
-    // Start heartbeat
-    startHeartbeat();
+    try {
+        groupJournal.sessionId = generateSessionId();
+        groupJournal.isHost = true;
+        groupJournal.syncEnabled = true;
+        
+        // Initialize session in Firebase
+        const sessionRef = firebase.database().ref(`sessions/${groupJournal.sessionId}`);
+        sessionRef.set({
+            createdAt: Date.now(),
+            host: groupJournal.userId,
+            evidence: app.evidence,
+            filters: Array.from(app.activeFilters),
+            timer: { dur: app.timer.dur }, // Only sync duration
+            lastUpdate: Date.now()
+        }).then(() => {
+            console.log("Session created:", groupJournal.sessionId);
+            
+            // Show active session UI
+            showActiveSession();
+            
+            // Start listening for updates from others
+            listenToSession();
+            
+            // Start heartbeat
+            startHeartbeat();
+        }).catch(error => {
+            console.error("Error creating session:", error);
+            alert("Failed to create session. Please check your internet connection.");
+            groupJournal.syncEnabled = false;
+        });
+    } catch (error) {
+        console.error("Error in createGroupSession:", error);
+        alert("Failed to create session. Please try again.");
+    }
 }
 
 // Join existing session
@@ -1005,11 +1017,15 @@ function joinGroupSession(sessionId) {
             groupJournal.isHost = false;
             groupJournal.syncEnabled = true;
             
+            console.log("Joined session:", sessionId);
+            
             // Load current state from session
             const data = snapshot.val();
             app.evidence = data.evidence || app.evidence;
             app.activeFilters = new Set(data.filters || []);
-            app.timer = data.timer || app.timer;
+            if (data.timer && data.timer.dur) {
+                app.timer.dur = data.timer.dur; // Only update duration
+            }
             
             // Update UI
             renderFilters();
@@ -1033,6 +1049,9 @@ function joinGroupSession(sessionId) {
         } else {
             alert("Session not found. Please check the session ID.");
         }
+    }).catch(error => {
+        console.error("Error joining session:", error);
+        alert("Failed to join session. Please check your internet connection.");
     });
 }
 
@@ -1056,29 +1075,35 @@ function listenToSession() {
     const sessionRef = firebase.database().ref(`sessions/${groupJournal.sessionId}`);
     
     sessionRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-        
-        // Prevent sync loops - don't apply if we just sent this update
-        if (Date.now() - groupJournal.lastSync < 500) return;
-        
-        // Update local state
-        app.evidence = data.evidence || app.evidence;
-        app.activeFilters = new Set(data.filters || []);
-        if (data.timer) {
-            app.timer = data.timer;
+        try {
+            const data = snapshot.val();
+            if (!data) return;
+            
+            // Prevent sync loops - don't apply if we just sent this update
+            if (Date.now() - groupJournal.lastSync < 500) return;
+            
+            // Update local state
+            app.evidence = data.evidence || app.evidence;
+            app.activeFilters = new Set(data.filters || []);
+            if (data.timer && data.timer.dur) {
+                app.timer.dur = data.timer.dur; // Only update duration, keep local interval
+            }
+            
+            // Update UI
+            renderFilters();
+            updateBoard();
+            // Update timer display
+            if (ui.timerDisplay) {
+                ui.timerDisplay.textContent = app.timer.dur;
+            }
+            
+            // Update user count
+            updateUserCount();
+        } catch (error) {
+            console.error("Error processing session update:", error);
         }
-        
-        // Update UI
-        renderFilters();
-        updateBoard();
-        // Update timer display
-        if (ui.timerDisplay) {
-            ui.timerDisplay.textContent = app.timer.dur;
-        }
-        
-        // Update user count
-        updateUserCount();
+    }, (error) => {
+        console.error("Error listening to session:", error);
     });
 }
 
@@ -1086,15 +1111,24 @@ function listenToSession() {
 function syncToFirebase() {
     if (!groupJournal.syncEnabled || !groupJournal.sessionId) return;
     
-    groupJournal.lastSync = Date.now();
+    // Debounce - wait 300ms before syncing to batch rapid changes
+    if (groupJournal.syncTimeout) {
+        clearTimeout(groupJournal.syncTimeout);
+    }
     
-    const sessionRef = firebase.database().ref(`sessions/${groupJournal.sessionId}`);
-    sessionRef.update({
-        evidence: app.evidence,
-        filters: Array.from(app.activeFilters),
-        timer: app.timer,
-        lastUpdate: Date.now()
-    });
+    groupJournal.syncTimeout = setTimeout(() => {
+        groupJournal.lastSync = Date.now();
+        
+        const sessionRef = firebase.database().ref(`sessions/${groupJournal.sessionId}`);
+        sessionRef.update({
+            evidence: app.evidence,
+            filters: Array.from(app.activeFilters),
+            timer: { dur: app.timer.dur }, // Only sync duration, not the interval
+            lastUpdate: Date.now()
+        }).catch(error => {
+            console.error("Sync error:", error);
+        });
+    }, 300);
 }
 
 // User heartbeat (track active users)
@@ -1162,9 +1196,21 @@ function showActiveSession() {
 function leaveGroupSession() {
     if (!groupJournal.sessionId) return;
     
+    console.log("Leaving session:", groupJournal.sessionId);
+    
+    // Stop listening to Firebase updates
+    const sessionRef = firebase.database().ref(`sessions/${groupJournal.sessionId}`);
+    sessionRef.off(); // Remove all listeners
+    
     // Remove user presence
     if (groupJournal.userId) {
         firebase.database().ref(`sessions/${groupJournal.sessionId}/users/${groupJournal.userId}`).remove();
+    }
+    
+    // Clear any pending sync
+    if (groupJournal.syncTimeout) {
+        clearTimeout(groupJournal.syncTimeout);
+        groupJournal.syncTimeout = null;
     }
     
     // Reset state
@@ -1299,4 +1345,3 @@ updateBoard = function() {
     }
 };
 
-// Add Group Journal to init
