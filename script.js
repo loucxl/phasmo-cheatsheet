@@ -2372,11 +2372,11 @@ async function sendFriendRequest(e) {
             return;
         }
         
-        // Get friend's info
-        const friendSnapshot = await firebase.database().ref(`users/${friendUid}`).once('value');
-        const friendData = friendSnapshot.val();
+        // Get friend's public info (nickname, photoURL are public)
+        const nicknameSnapshot = await firebase.database().ref(`users/${friendUid}/nickname`).once('value');
+        const friendNickname = nicknameSnapshot.val();
         
-        if (!friendData) {
+        if (!friendNickname) {
             errorEl.textContent = 'User not found';
             errorEl.classList.add('show');
             return;
@@ -2396,8 +2396,8 @@ async function sendFriendRequest(e) {
         // Send notification to THEIR friendRequestReceived path (they can write this)
         await firebase.database().ref(`users/${friendUid}/friendRequestReceived/${currentUser.uid}`).set(requestData);
         
-        console.log('✅ Friend request sent to', friendData.nickname);
-        alert(`Friend request sent to ${friendData.nickname}! ✅`);
+        console.log('✅ Friend request sent to', friendNickname);
+        alert(`Friend request sent to ${friendNickname}! ✅`);
         
         codeInput.value = '';
         document.getElementById('addFriendModal').close();
@@ -2413,23 +2413,29 @@ async function sendFriendRequest(e) {
 // Accept friend request
 async function acceptFriendRequest(friendUid) {
     try {
-        // Get friend's info
-        const friendSnapshot = await firebase.database().ref(`users/${friendUid}`).once('value');
-        const friendData = friendSnapshot.val();
+        // Get friend's public info
+        const nicknameSnapshot = await firebase.database().ref(`users/${friendUid}/nickname`).once('value');
+        const photoSnapshot = await firebase.database().ref(`users/${friendUid}/photoURL`).once('value');
         
-        if (!friendData) {
+        const friendNickname = nicknameSnapshot.val();
+        const friendPhotoURL = photoSnapshot.val();
+        
+        if (!friendNickname) {
             alert('Friend not found');
             return;
         }
         
         // Get your info
-        const yourSnapshot = await firebase.database().ref(`users/${currentUser.uid}`).once('value');
-        const yourData = yourSnapshot.val();
+        const yourNicknameSnapshot = await firebase.database().ref(`users/${currentUser.uid}/nickname`).once('value');
+        const yourPhotoSnapshot = await firebase.database().ref(`users/${currentUser.uid}/photoURL`).once('value');
+        
+        const yourNickname = yourNicknameSnapshot.val();
+        const yourPhotoURL = yourPhotoSnapshot.val();
         
         // Add friend to YOUR friends list
         await firebase.database().ref(`users/${currentUser.uid}/friends/${friendUid}`).set({
-            nickname: friendData.nickname,
-            photoURL: friendData.photoURL,
+            nickname: friendNickname,
+            photoURL: friendPhotoURL,
             since: Date.now()
         });
         
@@ -2439,13 +2445,13 @@ async function acceptFriendRequest(friendUid) {
         // Create a "friendAccepted" notification for the other user
         // They'll use this to add you to their friends list
         await firebase.database().ref(`users/${friendUid}/friendAccepted/${currentUser.uid}`).set({
-            nickname: yourData.nickname,
-            photoURL: yourData.photoURL,
+            nickname: yourNickname,
+            photoURL: yourPhotoURL,
             since: Date.now()
         });
         
         console.log('✅ Friend request accepted!');
-        alert(`You and ${friendData.nickname} are now friends! 🎉`);
+        alert(`You and ${friendNickname} are now friends! 🎉`);
         
         await loadFriends();
         
