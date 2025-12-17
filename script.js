@@ -432,6 +432,15 @@ function updateBoard() {
 
     ui.count.textContent = matches.length;
 
+    // Update evidence counter
+    const selectedEvidence = Object.values(app.evidence).filter(v => v === 1).length;
+    const evCountEl = document.getElementById('evCount');
+    if (evCountEl) evCountEl.textContent = selectedEvidence;
+
+    // Update filter counter
+    const filterCountEl = document.getElementById('filterCount');
+    if (filterCountEl) filterCountEl.textContent = app.activeFilters.size;
+
     document.querySelectorAll('.ev-btn').forEach(btn => {
         const id = btn.dataset.id;
         btn.dataset.state = app.evidence[id];
