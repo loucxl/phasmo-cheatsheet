@@ -37,8 +37,9 @@
                 <div class="user-details">
                     <span class="user-nickname" id="userNickname">Loading...</span>
                     <span class="user-stats">
+                        ⭐ Lvl <span id="userLevel">1</span> · 
                         🏆 <span id="userWins">0</span> wins · 
-                        📊 <span id="userWinRate">0</span>% win rate
+                        📊 <span id="userWinRate">0</span>%
                     </span>
                 </div>
             </div>
@@ -698,8 +699,23 @@
                 </div>
             </div>
             
+            <!-- Level Display -->
+            <div class="level-display">
+                <div class="level-info">
+                    <span class="level-badge">⭐ Level <span id="statLevel">1</span></span>
+                    <span class="xp-text"><span id="statXP">0</span> / <span id="statXPNext">500</span> XP</span>
+                </div>
+                <div class="xp-bar">
+                    <div class="xp-bar-fill" id="xpBarFill"></div>
+                </div>
+            </div>
+            
             <button class="btn-secondary" id="btnChangeNickname" style="margin-bottom: 16px;">
                 Change Nickname
+            </button>
+            
+            <button class="btn-danger" id="btnResetStats" style="margin-bottom: 16px;">
+                Reset All Stats
             </button>
             
             <h3 style="color: var(--text-main); margin-bottom: 12px;">Recent Investigations</h3>
@@ -714,7 +730,7 @@
     <!-- Submit Guess Modal -->
     <dialog id="guessModal" class="auth-modal">
         <div class="dialog-header">
-            <h2 class="dialog-title">Submit Your Guess</h2>
+            <h2 class="dialog-title">What Ghost Was It?</h2>
             <button class="dialog-close" id="closeGuess">&times;</button>
         </div>
         <div class="dialog-body">
