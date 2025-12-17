@@ -2374,51 +2374,70 @@ async function acceptFriendRequest(friendUid) {
         const friendSnapshot = await firebase.database().ref(`users/${friendUid}`).once('value');
         const friendData = friendSnapshot.val();
         
+        if (!friendData) {
+            alert('Friend not found');
+            return;
+        }
+        
         // Get your info
         const yourSnapshot = await firebase.database().ref(`users/${currentUser.uid}`).once('value');
         const yourData = yourSnapshot.val();
         
-        // Add to both friends lists
+        // Add friend to YOUR friends list
         await firebase.database().ref(`users/${currentUser.uid}/friends/${friendUid}`).set({
             nickname: friendData.nickname,
             photoURL: friendData.photoURL,
             since: Date.now()
         });
         
-        await firebase.database().ref(`users/${friendUid}/friends/${currentUser.uid}`).set({
+        // Remove from YOUR incoming requests
+        await firebase.database().ref(`users/${currentUser.uid}/friendRequests/incoming/${friendUid}`).remove();
+        
+        // Create a "friendAccepted" notification for the other user
+        // They'll use this to add you to their friends list
+        await firebase.database().ref(`users/${friendUid}/friendAccepted/${currentUser.uid}`).set({
             nickname: yourData.nickname,
             photoURL: yourData.photoURL,
             since: Date.now()
         });
         
-        // Remove friend requests
-        await firebase.database().ref(`users/${currentUser.uid}/friendRequests/incoming/${friendUid}`).remove();
-        await firebase.database().ref(`users/${friendUid}/friendRequests/outgoing/${currentUser.uid}`).remove();
+        console.log('✅ Friend request accepted!');
+        alert(`You and ${friendData.nickname} are now friends! 🎉`);
         
-        console.log('Friend request accepted!');
-        loadFriends();
+        await loadFriends();
         
     } catch (error) {
-        console.error('Error accepting friend request:', error);
-        alert('Failed to accept friend request');
+        console.error('❌ Error accepting friend request:', error);
+        alert('Failed to accept friend request: ' + error.message);
     }
 }
 
 // Decline friend request
 async function declineFriendRequest(friendUid) {
     try {
-        // Remove from your incoming
-        await firebase.database().ref(`users/${currentUser.uid}/friendRequests/incoming/${friendUid}`).remove();
+        // Check if it's incoming or outgoing
+        const incomingRef = firebase.database().ref(`users/${currentUser.uid}/friendRequests/incoming/${friendUid}`);
+        const outgoingRef = firebase.database().ref(`users/${currentUser.uid}/friendRequests/outgoing/${friendUid}`);
         
-        // Remove from their outgoing
-        await firebase.database().ref(`users/${friendUid}/friendRequests/outgoing/${currentUser.uid}`).remove();
+        const incomingSnapshot = await incomingRef.once('value');
+        const outgoingSnapshot = await outgoingRef.once('value');
         
-        console.log('Friend request declined');
-        loadFriends();
+        if (incomingSnapshot.exists()) {
+            // It's an incoming request (someone sent to us) - decline it
+            await incomingRef.remove();
+            console.log('Declined incoming friend request');
+        } else if (outgoingSnapshot.exists()) {
+            // It's an outgoing request (we sent to them) - cancel it
+            await outgoingRef.remove();
+            console.log('Cancelled outgoing friend request');
+        }
+        
+        // Reload friends list
+        await loadFriends();
         
     } catch (error) {
-        console.error('Error declining friend request:', error);
-        alert('Failed to decline friend request');
+        console.error('Error declining/cancelling friend request:', error);
+        alert('Failed to decline/cancel friend request: ' + error.message);
     }
 }
 
@@ -2586,8 +2605,43 @@ function updateFriendsBadge() {
 function listenToFriendRequests() {
     if (!currentUser) return;
     
+    // Listen for incoming friend requests
     firebase.database().ref(`users/${currentUser.uid}/friendRequests/incoming`).on('value', () => {
         loadFriends();
+    });
+    
+    // Listen for friend accepts (when someone accepts YOUR request)
+    firebase.database().ref(`users/${currentUser.uid}/friendAccepted`).on('child_added', async (snapshot) => {
+        const friendUid = snapshot.key;
+        const friendData = snapshot.val();
+        
+        console.log('Friend accepted your request:', friendData.nickname);
+        
+        try {
+            // Add them to YOUR friends list
+            await firebase.database().ref(`users/${currentUser.uid}/friends/${friendUid}`).set({
+                nickname: friendData.nickname,
+                photoURL: friendData.photoURL,
+                since: friendData.since
+            });
+            
+            // Remove from YOUR outgoing requests
+            await firebase.database().ref(`users/${currentUser.uid}/friendRequests/outgoing/${friendUid}`).remove();
+            
+            // Remove the accept notification
+            await firebase.database().ref(`users/${currentUser.uid}/friendAccepted/${friendUid}`).remove();
+            
+            console.log('✅ Added friend to your list');
+            
+            // Show notification
+            alert(`${friendData.nickname} accepted your friend request! 🎉`);
+            
+            // Reload friends list
+            await loadFriends();
+            
+        } catch (error) {
+            console.error('Error processing friend accept:', error);
+        }
     });
 }
 
