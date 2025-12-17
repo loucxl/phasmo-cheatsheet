@@ -10,6 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -28,6 +31,7 @@
             <button class="nav-btn" onclick="showSection('strategy')">📋 Strategy</button>
         </nav>
         <div class="header-tools">
+            <button class="btn-group" id="btnGroupJournal" title="Group Journal">🔗</button>
             <button class="btn-icon" id="btnManual" title="Hunter's Manual">📖</button>
             <button class="btn-reset" id="btnReset">Reset</button>
         </div>
@@ -510,6 +514,50 @@
             <button class="dialog-close" id="closeGhost">&times;</button>
         </div>
         <div class="dialog-body" id="mContent"></div>
+    </dialog>
+
+    <!-- Group Journal Modal -->
+    <dialog id="groupModal">
+        <div class="dialog-header">
+            <h2 class="dialog-title">🔗 GROUP JOURNAL</h2>
+            <button class="dialog-close" id="closeGroup">&times;</button>
+        </div>
+        <div class="dialog-body">
+            <div id="groupContent">
+                <div class="group-option">
+                    <h3>Create New Session</h3>
+                    <p>Start a new group journal and share the link with your team.</p>
+                    <button class="btn-primary" id="btnCreateSession">Create Session</button>
+                </div>
+                <div class="group-divider">OR</div>
+                <div class="group-option">
+                    <h3>Join Existing Session</h3>
+                    <p>Enter a session ID to join an ongoing investigation.</p>
+                    <input type="text" id="joinSessionInput" placeholder="Enter session ID...">
+                    <button class="btn-primary" id="btnJoinSession">Join Session</button>
+                </div>
+            </div>
+            <div id="activeSession" style="display: none;">
+                <div class="session-info">
+                    <div class="session-status">
+                        <span class="status-dot"></span>
+                        <span>Connected to Group Session</span>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-id">Session: <span id="currentSessionId"></span></div>
+                        <div class="session-users">👥 <span id="userCount">1</span> investigator(s)</div>
+                    </div>
+                </div>
+                <div class="share-section">
+                    <label>Share this link with your team:</label>
+                    <div class="share-input-group">
+                        <input type="text" id="shareLink" readonly>
+                        <button class="btn-copy" id="btnCopyLink">Copy</button>
+                    </div>
+                </div>
+                <button class="btn-danger" id="btnLeaveSession">Leave Session</button>
+            </div>
+        </div>
     </dialog>
 
     <!-- Manual Modal -->
