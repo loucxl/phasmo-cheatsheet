@@ -1424,6 +1424,50 @@ function initGoogleAuth() {
         document.getElementById('nicknameModal').showModal();
     });
     
+    // Reset stats button
+    document.getElementById('btnResetStats').addEventListener('click', async () => {
+        if (!currentUser) return;
+        
+        const confirmed = confirm('⚠️ Are you sure you want to reset ALL your stats?\n\nThis will delete:\n- All investigation history\n- Win/loss records\n- XP and level\n- Everything!\n\nThis CANNOT be undone!');
+        
+        if (!confirmed) return;
+        
+        // Double confirmation
+        const doubleConfirm = confirm('Really reset? This is your last chance!\n\nType YES in the next prompt to confirm.');
+        
+        if (!doubleConfirm) return;
+        
+        const finalConfirm = prompt('Type YES to reset all stats:');
+        
+        if (finalConfirm === 'YES') {
+            try {
+                // Reset stats
+                await firebase.database().ref(`users/${currentUser.uid}/stats`).set({
+                    total: 0,
+                    wins: 0,
+                    losses: 0,
+                    xp: 0,
+                    level: 1
+                });
+                
+                // Delete history
+                await firebase.database().ref(`users/${currentUser.uid}/history`).remove();
+                
+                alert('✅ Stats reset successfully!');
+                
+                // Reload stats display
+                loadStats();
+                loadUserStatsDisplay();
+                
+            } catch (error) {
+                console.error('Error resetting stats:', error);
+                alert('❌ Failed to reset stats. Please try again.');
+            }
+        } else {
+            alert('Reset cancelled.');
+        }
+    });
+    
     // View stats
     document.getElementById('btnViewStats').addEventListener('click', () => {
         loadStats();
@@ -1623,7 +1667,7 @@ async function loadStats() {
     try {
         // Load stats
         const statsSnapshot = await firebase.database().ref(`users/${currentUser.uid}/stats`).once('value');
-        const stats = statsSnapshot.val() || { total: 0, wins: 0, losses: 0 };
+        const stats = statsSnapshot.val() || { total: 0, wins: 0, losses: 0, xp: 0, level: 1 };
         
         const winRate = stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
         
@@ -1635,6 +1679,18 @@ async function loadStats() {
         document.getElementById('statWins').textContent = stats.wins;
         document.getElementById('statLosses').textContent = stats.losses;
         document.getElementById('statWinRate').textContent = winRate + '%';
+        
+        // Update level/XP display
+        const level = stats.level || 1;
+        const xp = stats.xp || 0;
+        const xpInLevel = xp % 500;
+        const xpForNextLevel = 500;
+        const xpPercent = (xpInLevel / xpForNextLevel) * 100;
+        
+        document.getElementById('statLevel').textContent = level;
+        document.getElementById('statXP').textContent = xpInLevel;
+        document.getElementById('statXPNext').textContent = xpForNextLevel;
+        document.getElementById('xpBarFill').style.width = xpPercent + '%';
         
         // Load history
         const historySnapshot = await firebase.database().ref(`users/${currentUser.uid}/history`)
@@ -1657,14 +1713,16 @@ async function loadStats() {
                 historyItem.className = `history-item ${item.correct ? 'correct' : 'incorrect'}`;
                 
                 const timeAgo = formatTimeAgo(item.timestamp);
+                const xpGained = item.xpGained || 0;
                 
                 historyItem.innerHTML = `
                     <div class="history-info">
                         <div class="history-guess">
-                            ${item.correct ? '✅' : '❌'} Guessed: ${item.guess}
+                            ${item.correct ? '✅' : '❌'} ${item.actualGhost || item.actual}
+                            ${xpGained > 0 ? `<span style="color: var(--acc-green)">+${xpGained} XP</span>` : ''}
                         </div>
                         <div class="history-result">
-                            Actual: ${item.actual} ${item.correct ? '' : '• Wrong'}
+                            ${item.possibleGhosts ? `Evidence showed: ${item.possibleGhosts.join(', ')}` : item.correct ? 'Correct match!' : 'Evidence mismatch'}
                         </div>
                     </div>
                     <div class="history-time">${timeAgo}</div>
@@ -1686,10 +1744,11 @@ async function loadUserStatsDisplay() {
     
     try {
         const snapshot = await firebase.database().ref(`users/${currentUser.uid}/stats`).once('value');
-        const stats = snapshot.val() || { total: 0, wins: 0, losses: 0 };
+        const stats = snapshot.val() || { total: 0, wins: 0, losses: 0, xp: 0, level: 1 };
         
         const winRate = stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
         
+        document.getElementById('userLevel').textContent = stats.level || 1;
         document.getElementById('userWins').textContent = stats.wins;
         document.getElementById('userWinRate').textContent = winRate;
         
@@ -1751,7 +1810,7 @@ function showInvestigationBanner() {
             🔍 Investigation in progress
             <span class="timer" id="investigationTimer">0:00</span>
         </div>
-        <button class="btn-submit-guess" id="btnOpenGuess">Submit Guess</button>
+        <button class="btn-submit-guess" id="btnOpenGuess">Submit Result</button>
     `;
     
     // Insert after auth bar
@@ -1786,7 +1845,32 @@ function openGuessModal() {
         return;
     }
     
-    // Get current matching ghosts (use existing logic from updateBoard)
+    // Show ALL ghosts for selection (not filtered)
+    const ghostOptions = document.getElementById('ghostOptions');
+    ghostOptions.innerHTML = '';
+    
+    // Add instruction text
+    const instruction = document.createElement('p');
+    instruction.style.cssText = 'grid-column: 1/-1; text-align: center; color: var(--text-muted); margin-bottom: 8px;';
+    instruction.textContent = 'What ghost was it in the game?';
+    ghostOptions.appendChild(instruction);
+    
+    // Show all ghosts
+    GHOSTS.forEach(ghost => {
+        const option = document.createElement('div');
+        option.className = 'ghost-option';
+        option.textContent = ghost.name;
+        option.addEventListener('click', () => submitActualGhost(ghost.name));
+        ghostOptions.appendChild(option);
+    });
+    
+    document.getElementById('guessModal').showModal();
+}
+
+async function submitActualGhost(actualGhost) {
+    if (!currentInvestigation || !currentUser) return;
+    
+    // Get what the user's evidence narrowed it down to
     const matches = [];
     GHOSTS.forEach(g => {
         let possible = true;
@@ -1801,68 +1885,74 @@ function openGuessModal() {
                 if(!g.tags.includes(fid)) possible = false;
             });
         }
-        if(possible) matches.push(g);
+        if(possible) matches.push(g.name);
     });
     
-    // Show options
-    const ghostOptions = document.getElementById('ghostOptions');
-    ghostOptions.innerHTML = '';
-    
-    if (matches.length === 0) {
-        ghostOptions.innerHTML = '<p style="text-align: center; color: var(--text-muted); grid-column: 1/-1;">No ghosts match your evidence. Try removing some crossed-out evidence.</p>';
-    } else {
-        matches.forEach(ghost => {
-            const option = document.createElement('div');
-            option.className = 'ghost-option';
-            option.textContent = ghost.name;
-            option.addEventListener('click', () => submitGuess(ghost.name));
-            ghostOptions.appendChild(option);
-        });
-    }
-    
-    document.getElementById('guessModal').showModal();
-}
-
-async function submitGuess(guessedGhost) {
-    if (!currentInvestigation || !currentUser) return;
-    
-    const correct = guessedGhost === currentInvestigation.actualGhost;
+    // Check if their evidence correctly narrowed it down
+    const correct = matches.includes(actualGhost) && matches.length > 0;
     const timeTaken = Math.floor((Date.now() - currentInvestigation.startTime) / 1000);
     
-    console.log('Guess submitted:', guessedGhost, 'Actual:', currentInvestigation.actualGhost, 'Correct:', correct);
+    console.log('Investigation complete:', {
+        actualGhost,
+        possibleFromEvidence: matches,
+        correct: correct
+    });
     
     try {
         // Get current stats
         const statsRef = firebase.database().ref(`users/${currentUser.uid}/stats`);
         const snapshot = await statsRef.once('value');
-        const currentStats = snapshot.val() || { total: 0, wins: 0, losses: 0 };
+        const currentStats = snapshot.val() || { total: 0, wins: 0, losses: 0, xp: 0, level: 1 };
+        
+        // Calculate XP gain
+        const xpGain = correct ? 10 : 0;
+        const newXP = (currentStats.xp || 0) + xpGain;
+        const newLevel = Math.floor(newXP / 500) + 1;
+        const leveledUp = newLevel > (currentStats.level || 1);
         
         // Update stats
         const newStats = {
             total: currentStats.total + 1,
             wins: currentStats.wins + (correct ? 1 : 0),
-            losses: currentStats.losses + (correct ? 0 : 1)
+            losses: currentStats.losses + (correct ? 0 : 1),
+            xp: newXP,
+            level: newLevel
         };
         
         await statsRef.set(newStats);
         
         // Save to history
         await firebase.database().ref(`users/${currentUser.uid}/history`).push({
-            guess: guessedGhost,
-            actual: currentInvestigation.actualGhost,
+            actualGhost: actualGhost,
+            possibleGhosts: matches,
             correct: correct,
             timeTaken: timeTaken,
+            xpGained: xpGain,
             timestamp: Date.now()
         });
         
         // Show result
         const winRate = Math.round((newStats.wins / newStats.total) * 100);
         
+        let resultMessage = '';
         if (correct) {
-            alert(`✅ CORRECT!\n\nYou guessed ${guessedGhost}!\n\nYour stats:\n🏆 ${newStats.wins} wins out of ${newStats.total} total\n📊 ${winRate}% win rate`);
+            resultMessage = `✅ CORRECT!\n\nIt was ${actualGhost} and your evidence matched!\n\n`;
+            if (leveledUp) {
+                resultMessage += `🎉 LEVEL UP! You're now Level ${newLevel}!\n\n`;
+            }
+            resultMessage += `+${xpGain} XP (${newXP % 500}/500 to Level ${newLevel + 1})\n\n`;
         } else {
-            alert(`❌ INCORRECT\n\nYou guessed: ${guessedGhost}\nActual ghost: ${currentInvestigation.actualGhost}\n\nYour stats:\n🏆 ${newStats.wins} wins out of ${newStats.total} total\n📊 ${winRate}% win rate`);
+            if (matches.length === 0) {
+                resultMessage = `❌ INCORRECT\n\nIt was ${actualGhost} but your evidence ruled it out.\n\n`;
+            } else {
+                resultMessage = `❌ INCORRECT\n\nIt was ${actualGhost} but your evidence showed: ${matches.join(', ')}\n\n`;
+            }
+            resultMessage += `No XP gained\n\n`;
         }
+        
+        resultMessage += `Your stats:\n🏆 ${newStats.wins} wins out of ${newStats.total} total\n📊 ${winRate}% accuracy\n⭐ Level ${newStats.level} (${newStats.xp} XP)`;
+        
+        alert(resultMessage);
         
         // Update display
         loadUserStatsDisplay();
@@ -1871,8 +1961,8 @@ async function submitGuess(guessedGhost) {
         endInvestigation();
         
     } catch (error) {
-        console.error('Error submitting guess:', error);
-        alert('Failed to submit guess. Please try again.');
+        console.error('Error submitting investigation:', error);
+        alert('Failed to save investigation. Please try again.');
     }
     
     // Close modal
