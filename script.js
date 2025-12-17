@@ -1879,9 +1879,13 @@ function showInvestigationBanner() {
         <button class="btn-submit-guess" id="btnOpenGuess">Submit Result</button>
     `;
     
-    // Insert after auth bar
-    const authBar = document.getElementById('authBar');
-    authBar.after(banner);
+    // Insert after header
+    const header = document.querySelector('header');
+    if (header) {
+        header.after(banner);
+    } else {
+        document.body.insertBefore(banner, document.body.firstChild);
+    }
     
     // Start timer
     updateInvestigationTimer();
@@ -2474,6 +2478,12 @@ async function declineFriendRequest(friendUid) {
         if (incomingSnapshot.exists()) {
             // It's an incoming request (someone sent to us) - decline it
             await incomingRef.remove();
+            
+            // Notify them it was declined so they can remove from their outgoing
+            await firebase.database().ref(`users/${friendUid}/friendRequestDeclined/${currentUser.uid}`).set({
+                timestamp: Date.now()
+            });
+            
             console.log('Declined incoming friend request');
         } else if (outgoingSnapshot.exists()) {
             // It's an outgoing request (we sent to them) - cancel it
@@ -2715,6 +2725,29 @@ function listenToFriendRequests() {
             
         } catch (error) {
             console.error('Error processing friend accept:', error);
+        }
+    });
+    
+    // Listen for friend request declines (when someone declines YOUR request)
+    firebase.database().ref(`users/${currentUser.uid}/friendRequestDeclined`).on('child_added', async (snapshot) => {
+        const friendUid = snapshot.key;
+        
+        console.log('Friend request was declined');
+        
+        try {
+            // Remove from YOUR outgoing requests
+            await firebase.database().ref(`users/${currentUser.uid}/friendRequests/outgoing/${friendUid}`).remove();
+            
+            // Remove the decline notification
+            await firebase.database().ref(`users/${currentUser.uid}/friendRequestDeclined/${friendUid}`).remove();
+            
+            console.log('✅ Removed declined request from outgoing');
+            
+            // Reload friends list
+            await loadFriends();
+            
+        } catch (error) {
+            console.error('Error processing friend decline:', error);
         }
     });
 }
