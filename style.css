@@ -2008,3 +2008,218 @@ dialog::backdrop {
     transform: translateY(-2px);
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   FRIENDS SYSTEM STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Notification Badge */
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--acc-red);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 900;
+    font-family: var(--font-mono);
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.btn-icon {
+    position: relative;
+}
+
+/* Friend Code Section */
+.friend-code-section {
+    background: var(--bg-elevated);
+    border: 2px solid var(--acc-cyan);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.friend-code-label {
+    color: var(--text-muted);
+    font-family: var(--font-hud);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.friend-code-display {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.friend-code-text {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--acc-cyan);
+    flex: 1;
+    text-align: center;
+}
+
+.btn-copy-code {
+    background: var(--acc-cyan);
+    color: #000;
+    border: none;
+    padding: 12px 20px;
+    font-family: var(--font-hud);
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-copy-code:hover {
+    background: var(--acc-green);
+    transform: translateY(-2px);
+}
+
+/* Friends Section */
+.friends-section, .requests-section {
+    margin-bottom: 24px;
+}
+
+.friends-section h3, .requests-section h3 {
+    color: var(--text-main);
+    font-family: var(--font-hud);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+}
+
+.friends-list, .requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Friend Item */
+.friend-item {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: 0.2s;
+}
+
+.friend-item:hover {
+    background: rgba(6, 182, 212, 0.05);
+    border-color: var(--acc-cyan);
+}
+
+.friend-avatar, .request-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--acc-cyan);
+}
+
+.friend-info, .request-info {
+    flex: 1;
+}
+
+.friend-name, .request-name {
+    color: var(--text-main);
+    font-family: var(--font-hud);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.friend-since, .request-time {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.btn-friend-remove {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--acc-red);
+    color: var(--acc-red);
+    padding: 8px 16px;
+    font-family: var(--font-hud);
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.85rem;
+}
+
+.btn-friend-remove:hover {
+    background: var(--acc-red);
+    color: #000;
+}
+
+/* Request Item */
+.request-item {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--acc-cyan);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.request-item.outgoing {
+    border-left-color: var(--acc-purple);
+}
+
+.btn-request-accept, .btn-request-decline, .btn-request-cancel {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 1.2rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-request-accept {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--acc-green);
+}
+
+.btn-request-accept:hover {
+    background: var(--acc-green);
+    color: #000;
+}
+
+.btn-request-decline, .btn-request-cancel {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--acc-red);
+}
+
+.btn-request-decline:hover, .btn-request-cancel:hover {
+    background: var(--acc-red);
+    color: #000;
+}
+
