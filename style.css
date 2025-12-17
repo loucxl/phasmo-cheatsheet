@@ -2243,3 +2243,71 @@ dialog::backdrop {
     color: #000;
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   INVESTIGATION BANNER STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+.investigation-banner {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border-bottom: 2px solid var(--acc-cyan);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.investigation-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-hud);
+    font-weight: 700;
+    color: var(--acc-cyan);
+    font-size: 1rem;
+}
+
+.investigation-info .timer {
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    color: var(--text-main);
+    background: rgba(6, 182, 212, 0.1);
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--acc-cyan);
+}
+
+.btn-submit-guess {
+    background: var(--acc-cyan);
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    font-family: var(--font-hud);
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-submit-guess:hover {
+    background: var(--acc-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
