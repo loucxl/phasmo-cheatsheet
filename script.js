@@ -898,6 +898,38 @@ window.addEventListener('DOMContentLoaded', function() {
     }, 200);
 });
 
+
+// ═══════════════════════════════════════════════════════════════
+// STAGGERED XP LEVELING SYSTEM
+// ═══════════════════════════════════════════════════════════════
+// Level 1-10:  100 XP per level (10 correct = 1 level)
+// Level 11-25: 200 XP per level (20 correct = 1 level)
+// Level 26-50: 400 XP per level (40 correct = 1 level)
+// Level 51+:   800 XP per level (80 correct = 1 level)
+
+function getXPForLevel(level) {
+    if (level <= 10) return 100;
+    if (level <= 25) return 200;
+    if (level <= 50) return 400;
+    return 800;
+}
+
+function getLevelFromXP(xp) {
+    let level = 1;
+    let xpRemaining = xp;
+    
+    while (xpRemaining >= getXPForLevel(level)) {
+        xpRemaining -= getXPForLevel(level);
+        level++;
+    }
+    
+    return {
+        level: level,
+        xpInCurrentLevel: xpRemaining,
+        xpForNextLevel: getXPForLevel(level)
+    };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // GROUP JOURNAL - MULTIPLAYER SYNC
 // ═══════════════════════════════════════════════════════════════
@@ -1713,8 +1745,9 @@ async function loadStats() {
         // Update level/XP display
         const level = stats.level || 1;
         const xp = stats.xp || 0;
-        const xpInLevel = xp % 500;
-        const xpForNextLevel = 500;
+        const levelInfo = getLevelFromXP(xp);
+        const xpInLevel = levelInfo.xpInCurrentLevel;
+        const xpForNextLevel = levelInfo.xpForNextLevel;
         const xpPercent = (xpInLevel / xpForNextLevel) * 100;
         
         document.getElementById('statLevel').textContent = level;
@@ -1940,7 +1973,10 @@ async function submitActualGhost(actualGhost) {
         // Calculate XP gain
         const xpGain = correct ? 10 : 0;
         const newXP = (currentStats.xp || 0) + xpGain;
-        const newLevel = Math.floor(newXP / 500) + 1;
+        
+        // Calculate new level using staggered system
+        const levelInfo = getLevelFromXP(newXP);
+        const newLevel = levelInfo.level;
         const leveledUp = newLevel > (currentStats.level || 1);
         
         // Update stats
@@ -1973,7 +2009,7 @@ async function submitActualGhost(actualGhost) {
             if (leveledUp) {
                 resultMessage += `🎉 LEVEL UP! You're now Level ${newLevel}!\n\n`;
             }
-            resultMessage += `+${xpGain} XP (${newXP % 500}/500 to Level ${newLevel + 1})\n\n`;
+            resultMessage += `+${xpGain} XP (${levelInfo.xpInCurrentLevel}/${levelInfo.xpForNextLevel} to Level ${newLevel + 1})\n\n`;
         } else {
             if (matches.length === 0) {
                 resultMessage = `❌ INCORRECT\n\nIt was ${actualGhost} but your evidence ruled it out.\n\n`;
@@ -2722,7 +2758,9 @@ async function viewFriendStats(friendUid, friendNickname) {
         const winRate = stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
         const level = stats.level || 1;
         const xp = stats.xp || 0;
-        const xpInLevel = xp % 500;
+        const levelInfo = getLevelFromXP(xp);
+        const xpInLevel = levelInfo.xpInCurrentLevel;
+        const xpForNextLevel = levelInfo.xpForNextLevel;
         
         // Update modal content
         document.getElementById('friendStatsNickname').textContent = friendNickname;
@@ -2732,7 +2770,7 @@ async function viewFriendStats(friendUid, friendNickname) {
         document.getElementById('friendStatWins').textContent = stats.wins;
         document.getElementById('friendStatLosses').textContent = stats.losses;
         document.getElementById('friendStatWinRate').textContent = winRate + '%';
-        document.getElementById('friendStatXP').textContent = xpInLevel + ' / 500 XP';
+        document.getElementById('friendStatXP').textContent = xpInLevel + ' / ' + xpForNextLevel + ' XP';
         
         // Open modal
         document.getElementById('friendStatsModal').showModal();
