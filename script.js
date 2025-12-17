@@ -2138,36 +2138,64 @@ function generateFriendCode() {
 
 // Initialize friend code for user
 async function initializeFriendCode() {
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.log('No currentUser, skipping friend code init');
+        return;
+    }
+    
+    console.log('Initializing friend code for user:', currentUser.uid);
     
     try {
         const userRef = firebase.database().ref(`users/${currentUser.uid}`);
         const snapshot = await userRef.once('value');
-        const userData = snapshot.val();
+        const userData = snapshot.val() || {}; // Handle null userData
+        
+        console.log('User data:', userData);
         
         if (!userData.friendCode) {
+            console.log('No friend code found, generating...');
+            
             // Generate unique friend code
             let code = generateFriendCode();
+            console.log('Generated code:', code);
             
             // Check if code exists (very unlikely but just in case)
             let codeExists = true;
-            while (codeExists) {
+            let attempts = 0;
+            while (codeExists && attempts < 5) {
                 const codeCheck = await firebase.database().ref('friendCodes').child(code).once('value');
                 if (!codeCheck.exists()) {
                     codeExists = false;
                 } else {
+                    console.log('Code collision, regenerating...');
                     code = generateFriendCode();
                 }
+                attempts++;
             }
+            
+            if (attempts >= 5) {
+                console.error('Failed to generate unique code after 5 attempts');
+                return;
+            }
+            
+            console.log('Saving friend code:', code);
             
             // Save friend code
             await userRef.update({ friendCode: code });
             await firebase.database().ref('friendCodes').child(code).set(currentUser.uid);
             
-            console.log('Friend code generated:', code);
+            console.log('✅ Friend code saved:', code);
+            
+            // Immediately update the display
+            const codeEl = document.getElementById('yourFriendCode');
+            if (codeEl) {
+                codeEl.textContent = code;
+            }
+        } else {
+            console.log('Friend code already exists:', userData.friendCode);
         }
     } catch (error) {
-        console.error('Error initializing friend code:', error);
+        console.error('❌ Error initializing friend code:', error);
     }
 }
 
