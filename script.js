@@ -913,6 +913,12 @@ const firebaseConfig = {
     appId: "1:224238426204:web:b20b8db2f80981d2f02e99"
 };
 
+// Initialize Firebase App immediately
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    console.log("Firebase App initialized");
+}
+
 // Group Journal State
 let groupJournal = {
     sessionId: null,
@@ -923,7 +929,7 @@ let groupJournal = {
     syncTimeout: null
 };
 
-// Initialize Firebase (only if config is set)
+// Initialize Firebase (check if already initialized)
 function initFirebase() {
     if (firebaseConfig.apiKey === "YOUR-API-KEY-HERE") {
         console.log("Firebase not configured. Group Journal disabled.");
@@ -931,9 +937,7 @@ function initFirebase() {
     }
     
     try {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        // App is already initialized globally, just generate user ID
         groupJournal.userId = generateUserId();
         return true;
     } catch (error) {
