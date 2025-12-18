@@ -456,6 +456,13 @@ function updateBoard() {
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.danger = g.danger;
+        
+        // Highlight if this is the final ghost
+        if (matches.length === 1) {
+            card.style.border = '2px solid var(--acc-green)';
+            card.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.3)';
+            card.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, var(--bg-card) 100%)';
+        }
 
         let dots = '';
         EVIDENCE.forEach(e => {
@@ -2848,4 +2855,350 @@ async function viewFriendStats(friendUid, friendNickname) {
         alert('Failed to load friend stats');
     }
 }
+
+
+// ═══════════════════════════════════════════════════════════════
+// SIDEBAR INTEGRATION
+// ═══════════════════════════════════════════════════════════════
+
+// Sort ghosts alphabetically
+GHOSTS.sort((a, b) => a.name.localeCompare(b.name));
+
+// Populate sidebar on load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Populating sidebar...');
+    
+    // Populate evidence
+    const evidenceContainer = document.getElementById('sidebarEvidence');
+    if (evidenceContainer) {
+        evidenceContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <button onclick="cycleEvidence('emf')" oncontextmenu="ruleOutEvidence('emf', event)" data-ev="emf" class="sidebar-btn">
+                    <span style="font-size: 1rem;">📶</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main); flex: 1;">EMF 5</span>
+                </button>
+                <button onclick="cycleEvidence('box')" oncontextmenu="ruleOutEvidence('box', event)" data-ev="box" class="sidebar-btn">
+                    <span style="font-size: 1rem;">📦</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main); flex: 1;">BOX</span>
+                </button>
+                <button onclick="cycleEvidence('uv')" oncontextmenu="ruleOutEvidence('uv', event)" data-ev="uv" class="sidebar-btn">
+                    <span style="font-size: 1rem;">💡</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main); flex: 1;">UV</span>
+                </button>
+                <button onclick="cycleEvidence('orb')" oncontextmenu="ruleOutEvidence('orb', event)" data-ev="orb" class="sidebar-btn">
+                    <span style="font-size: 1rem;">🔮</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main); flex: 1;">ORBS</span>
+                </button>
+                <button onclick="cycleEvidence('writing')" oncontextmenu="ruleOutEvidence('writing', event)" data-ev="writing" class="sidebar-btn">
+                    <span style="font-size: 1rem;">✍️</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main); flex: 1;">WRITING</span>
+                </button>
+                <button onclick="cycleEvidence('freezing')" oncontextmenu="ruleOutEvidence('freezing', event)" data-ev="freezing" class="sidebar-btn">
+                    <span style="font-size: 1rem;">❄️</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main); flex: 1;">FREEZE</span>
+                </button>
+                <button onclick="cycleEvidence('dots')" oncontextmenu="ruleOutEvidence('dots', event)" data-ev="dots" class="sidebar-btn">
+                    <span style="font-size: 1rem;">🎯</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main); flex: 1;">D.O.T.S</span>
+                </button>
+            </div>
+        `;
+    }
+    
+    // Populate filters
+    const filtersContainer = document.getElementById('sidebarFilters');
+    if (filtersContainer) {
+        filtersContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <button onclick="toggleFilter('fast')" data-filter="fast" class="sidebar-btn">
+                    <span style="font-size: 1rem;">⚡</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main);">Fast Speed</span>
+                </button>
+                <button onclick="toggleFilter('early')" data-filter="early" class="sidebar-btn">
+                    <span style="font-size: 1rem;">⚠️</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main);">Early Hunter</span>
+                </button>
+                <button onclick="toggleFilter('quiet')" data-filter="quiet" class="sidebar-btn">
+                    <span style="font-size: 1rem;">🟡</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main);">Quiet Steps</span>
+                </button>
+                <button onclick="toggleFilter('guarantee')" data-filter="guarantee" class="sidebar-btn">
+                    <span style="font-size: 1rem;">✨</span>
+                    <span style="font-family: var(--font-hud); font-size: 0.75rem; font-weight: 600; color: var(--text-main);">Guaranteed Ev</span>
+                </button>
+            </div>
+        `;
+    }
+    
+    // Hook submit button
+    const btnSubmit = document.getElementById('btnSubmitSidebar');
+    if (btnSubmit) {
+        btnSubmit.addEventListener('click', openGuessModal);
+    }
+    
+    // Start timer sync
+    setInterval(function() {
+        const sidebarInv = document.getElementById('sidebarInvestigation');
+        const timerEl = document.getElementById('sidebarTimer');
+        
+        if (!currentInvestigation) {
+            if (sidebarInv) sidebarInv.style.display = 'none';
+            return;
+        }
+        
+        if (sidebarInv) sidebarInv.style.display = 'block';
+        
+        const elapsed = Math.floor((Date.now() - currentInvestigation.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        if (timerEl) {
+            timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }, 1000);
+    
+    // Initial sync
+    setTimeout(syncSidebar, 100);
+});
+
+// Sync sidebar state with main app
+function syncSidebar() {
+    // Calculate possible evidence based on current matches
+    const matches = [];
+    const possibleEv = new Set();
+    
+    GHOSTS.forEach(g => {
+        let possible = true;
+        for(const [id, val] of Object.entries(app.evidence)) {
+            if(val === 0) continue;
+            const has = g.ev.includes(id) || (g.name === 'The Mimic' && id === 'orb');
+            if(val === 1 && !has) possible = false;
+            if(val === 2 && has) possible = false;
+        }
+        if(possible && app.activeFilters.size > 0) {
+            app.activeFilters.forEach(fid => {
+                if(!g.tags.includes(fid)) possible = false;
+            });
+        }
+        
+        if(possible) {
+            matches.push(g);
+            g.ev.forEach(e => possibleEv.add(e));
+            if(g.name === 'The Mimic') possibleEv.add('orb');
+        }
+    });
+    
+    // Sync evidence buttons
+    Object.keys(app.evidence).forEach(evId => {
+        const btn = document.querySelector(`#sidebarEvidence button[data-ev="${evId}"]`);
+        if (btn) {
+            btn.style.borderColor = 'var(--border)';
+            btn.style.background = 'var(--bg-card)';
+            btn.style.opacity = '1';
+            
+            if (app.evidence[evId] === 1) {
+                btn.style.borderColor = 'var(--acc-green)';
+                btn.style.background = 'rgba(16, 185, 129, 0.1)';
+            } else if (app.evidence[evId] === 2) {
+                btn.style.borderColor = 'var(--acc-red)';
+                btn.style.background = 'rgba(239, 68, 68, 0.1)';
+                btn.style.opacity = '0.6';
+            } else if (app.evidence[evId] === 0 && matches.length < GHOSTS.length && !possibleEv.has(evId)) {
+                // Grey out if not selected AND not possible with current matches
+                btn.style.opacity = '0.3';
+                btn.style.pointerEvents = 'none';
+            } else {
+                btn.style.pointerEvents = 'auto';
+            }
+        }
+    });
+    
+    // Sync filter buttons
+    document.querySelectorAll('#sidebarFilters button').forEach(btn => {
+        const filterId = btn.dataset.filter;
+        btn.style.borderColor = 'var(--border)';
+        btn.style.background = 'var(--bg-card)';
+        
+        if (app.activeFilters.has(filterId)) {
+            btn.style.borderColor = 'var(--acc-purple)';
+            btn.style.background = 'rgba(139, 92, 246, 0.1)';
+        }
+    });
+    
+    // Sync ghost count
+    const sidebarCount = document.getElementById('sidebarCount');
+    const mainCount = document.getElementById('matchCount');
+    if (sidebarCount && mainCount) {
+        sidebarCount.textContent = mainCount.textContent;
+    }
+}
+
+// Hook into existing updateBoard to sync sidebar
+const _origUpdateBoard = updateBoard;
+updateBoard = function() {
+    _origUpdateBoard();
+    syncSidebar();
+};
+
+// Add CSS for sidebar buttons
+const sidebarCSS = document.createElement('style');
+sidebarCSS.textContent = `
+    .sidebar-btn {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 8px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .sidebar-btn:hover {
+        border-color: var(--acc-cyan);
+        background: rgba(6, 182, 212, 0.05);
+    }
+`;
+document.head.appendChild(sidebarCSS);
+
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION HIGHLIGHTING
+// ═══════════════════════════════════════════════════════════════
+
+// Highlight active section in nav
+function highlightActiveSection() {
+    const sections = ['ghosts', 'maps', 'equipment', 'mechanics', 'strategy'];
+    
+    sections.forEach(sectionId => {
+        const section = document.getElementById(`section-${sectionId}`);
+        const navBtn = document.querySelector(`button[onclick="showSection('${sectionId}')"]`);
+        
+        if (section && navBtn) {
+            if (section.style.display !== 'none') {
+                navBtn.style.borderColor = 'var(--acc-cyan)';
+                navBtn.style.background = 'rgba(6, 182, 212, 0.1)';
+                navBtn.style.color = '#fff';
+            } else {
+                navBtn.style.borderColor = 'transparent';
+                navBtn.style.background = 'transparent';
+                navBtn.style.color = 'var(--text-muted)';
+            }
+        }
+    });
+}
+
+// Override showSection to add highlighting
+const _origShowSection = showSection;
+showSection = function(sectionId) {
+    _origShowSection(sectionId);
+    highlightActiveSection();
+};
+
+// Initial highlight
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(highlightActiveSection, 200);
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// FILTER TOGGLE FOR SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+
+function toggleFilter(filterId) {
+    console.log('toggleFilter called:', filterId);
+    
+    if (app.activeFilters.has(filterId)) {
+        app.activeFilters.delete(filterId);
+    } else {
+        app.activeFilters.add(filterId);
+    }
+    
+    renderFilters(); // Update original filter chips
+    updateBoard(); // This will also call syncSidebar
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// EVIDENCE CYCLING FOR SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+
+function cycleEvidence(evId) {
+    console.log('cycleEvidence (left click):', evId);
+    
+    // Left click - toggle between none and found (green)
+    if (app.evidence[evId] === 0) {
+        app.evidence[evId] = 1; // Found (green)
+    } else {
+        app.evidence[evId] = 0; // None
+    }
+    
+    renderEvidence();
+    updateBoard();
+}
+
+function ruleOutEvidence(evId, event) {
+    console.log('ruleOutEvidence (right click):', evId);
+    event.preventDefault();
+    
+    // Right click - toggle between none and ruled out (red)
+    if (app.evidence[evId] === 0) {
+        app.evidence[evId] = 2; // Ruled out (red)
+    } else {
+        app.evidence[evId] = 0; // None
+    }
+    
+    renderEvidence();
+    updateBoard();
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// HOOK UP NEW TOP BAR BUTTONS
+// ═══════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Setting up new top bar button handlers...');
+    
+    // Share button - opens group journal
+    const newShareBtn = document.getElementById('btnShare');
+    const oldGroupBtn = document.getElementById('btnGroupJournal');
+    if (newShareBtn && oldGroupBtn) {
+        newShareBtn.addEventListener('click', function() {
+            console.log('New share button clicked, triggering old group journal button');
+            oldGroupBtn.click();
+        });
+    }
+    
+    // Friends button - wait for it to be created dynamically, then hook it up
+    setTimeout(function() {
+        const newFriendsBtn = document.getElementById('btnFriends');
+        // The old friends button is also id='btnFriends' but created dynamically
+        // We need to make our new button call the openFriendsModal function
+        if (newFriendsBtn && typeof openFriendsModal === 'function') {
+            // Remove any existing listeners by cloning
+            const newBtn = newFriendsBtn.cloneNode(true);
+            newFriendsBtn.parentNode.replaceChild(newBtn, newFriendsBtn);
+            
+            newBtn.addEventListener('click', function() {
+                console.log('New friends button clicked, calling openFriendsModal');
+                openFriendsModal();
+            });
+            
+            // Also sync the badge
+            const oldBadge = document.querySelector('.header-tools #friendsBadge');
+            const newBadge = document.getElementById('friendsBadge');
+            if (oldBadge && newBadge) {
+                // Copy badge state
+                setInterval(function() {
+                    if (oldBadge.style.display !== 'none') {
+                        newBadge.style.display = 'block';
+                        newBadge.textContent = oldBadge.textContent;
+                    } else {
+                        newBadge.style.display = 'none';
+                    }
+                }, 1000);
+            }
+        }
+    }, 1000);
+});
 
