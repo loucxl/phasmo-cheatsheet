@@ -2964,25 +2964,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     lastUserState = userState;
                     
                     newUserView.innerHTML = `
-                        <button class="btn-user-new" id="btnUserMenuNew" style="background: rgba(6, 182, 212, 0.1); border: 1px solid var(--acc-cyan); padding: 4px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--font-hud); transition: all 0.2s;">
+                        <button class="btn-user-new" id="btnUserMenuNew" onclick="openNewUserMenu()" style="background: rgba(6, 182, 212, 0.1); border: 1px solid var(--acc-cyan); padding: 4px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--font-hud); transition: all 0.2s;">
                             <img src="${avatar.src}" alt="" style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--acc-cyan);">
                             <span style="color: var(--text-main); font-weight: 700; font-size: 0.75rem; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${nickname.textContent}</span>
                             <span style="background: var(--acc-cyan); color: #000; padding: 2px 5px; border-radius: 8px; font-size: 0.65rem; font-weight: 900;">Lvl ${level.textContent}</span>
                         </button>
                     `;
-                    
-                    // Hook up user menu click AFTER creating button
-                    setTimeout(function() {
-                        const newUserBtn = document.getElementById('btnUserMenuNew');
-                        const oldUserBtn = document.getElementById('btnUserMenu');
-                        if (newUserBtn && oldUserBtn) {
-                            newUserBtn.addEventListener('click', function(e) {
-                                console.log('User menu clicked');
-                                e.stopPropagation();
-                                oldUserBtn.click();
-                            });
-                        }
-                    }, 10);
                 }
             }
         } else {
@@ -3260,4 +3247,19 @@ sidebarCSS.textContent = `
     }
 `;
 document.head.appendChild(sidebarCSS);
+
+
+// ============================================================
+// GLOBAL USER MENU FUNCTION
+// ============================================================
+window.openNewUserMenu = function() {
+    console.log('🔵 New user menu button clicked!');
+    const oldUserBtn = document.getElementById('btnUserMenu');
+    if (oldUserBtn) {
+        console.log('🔵 Triggering old user menu button');
+        oldUserBtn.click();
+    } else {
+        console.error('❌ Old user menu button not found!');
+    }
+};
 
