@@ -1454,8 +1454,14 @@ function initGoogleAuth() {
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
         const dropdown = document.getElementById('userDropdown');
-        const userMenu = document.getElementById('btnUserMenu');
-        if (dropdown && !dropdown.contains(e.target) && e.target !== userMenu) {
+        const oldUserMenu = document.getElementById('btnUserMenu');
+        const newUserMenu = document.getElementById('btnUserMenuNew');
+        
+        // Check if click is outside dropdown and not on either user button
+        if (dropdown && !dropdown.contains(e.target) && 
+            e.target !== oldUserMenu && 
+            e.target !== newUserMenu &&
+            !e.target.closest('#btnUserMenuNew')) {
             dropdown.style.display = 'none';
         }
     });
