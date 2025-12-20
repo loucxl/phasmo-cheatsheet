@@ -3254,12 +3254,13 @@ document.head.appendChild(sidebarCSS);
 // ============================================================
 window.openNewUserMenu = function() {
     console.log('🔵 New user menu button clicked!');
-    const oldUserBtn = document.getElementById('btnUserMenu');
-    if (oldUserBtn) {
-        console.log('🔵 Triggering old user menu button');
-        oldUserBtn.click();
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) {
+        console.log('🔵 Toggling dropdown, current display:', dropdown.style.display);
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        console.log('🔵 New display:', dropdown.style.display);
     } else {
-        console.error('❌ Old user menu button not found!');
+        console.error('❌ User dropdown not found!');
     }
 };
 
